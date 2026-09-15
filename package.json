@@ -1,0 +1,29 @@
+{
+  "name": "herdr-schlepr",
+  "version": "0.1.0",
+  "description": "A polished Herdr popup for moving live panes and tabs across workspaces",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "esbuild src/launcher.ts src/popup/app.ts --bundle --platform=node --target=node20 --format=esm --outdir=dist",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && node --import tsx --test test/*.test.ts",
+    "test:integration": "./scripts/integration-herdr.sh",
+    "check": "npm run test && npm run build"
+  },
+  "keywords": [
+    "herdr",
+    "herdr-plugin",
+    "terminal",
+    "tui"
+  ],
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

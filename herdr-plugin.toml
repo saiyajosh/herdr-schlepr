@@ -1,0 +1,38 @@
+id = "schlepr"
+name = "Schlepr"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Move live panes and complete tabs between Herdr workspaces from a polished popup."
+platforms = ["linux", "macos"]
+
+[[build]]
+command = ["npm", "ci"]
+
+[[build]]
+command = ["npm", "run", "build"]
+
+[[actions]]
+id = "move"
+title = "Move pane or tab…"
+contexts = ["pane"]
+command = ["node", "dist/launcher.js", "pane"]
+
+[[actions]]
+id = "move-pane"
+title = "Move pane…"
+contexts = ["pane"]
+command = ["node", "dist/launcher.js", "pane"]
+
+[[actions]]
+id = "move-tab"
+title = "Move tab…"
+contexts = ["tab"]
+command = ["node", "dist/launcher.js", "tab"]
+
+[[panes]]
+id = "picker"
+title = "Schlepr"
+placement = "popup"
+width = "80%"
+height = "75%"
+command = ["node", "dist/popup/app.js"]
