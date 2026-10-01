@@ -26,6 +26,13 @@ From Herdr's plugin registry:
 herdr plugin install saiyajosh/herdr-schlepr
 ```
 
+From npm:
+
+```bash
+pnpm add --global herdr-schlepr
+herdr plugin link "$(pnpm root --global)/herdr-schlepr"
+```
+
 ### Install from source
 
 ```bash
@@ -102,12 +109,14 @@ The journal is diagnostic; automatic rollback is intentionally not promised beca
 pnpm test
 pnpm run build
 pnpm run check
+pnpm run pack:check
 pnpm run test:integration # opt-in; requires a running Herdr session
 herdr plugin link "$PWD"
 herdr plugin action list --plugin schlepr
 herdr plugin log list --plugin schlepr
 ```
 
+Maintainers can publish a verified package with `pnpm publish`. The publish lifecycle reruns the complete check suite, validates the package with Publint, rebuilds `dist/`, and requests npm provenance. Publishing a GitHub release tagged `v<package version>` runs the same flow through npm trusted publishing. Before using that workflow, configure npm's trusted publisher for `saiyajosh/herdr-schlepr` and `.github/workflows/publish.yml`.
 
 ## License
 
