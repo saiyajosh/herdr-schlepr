@@ -1,5 +1,12 @@
 export type MoveMode = "pane" | "tab";
+
 export type SplitDirection = "right" | "down";
+
+export type JsonPrimitive = boolean | number | string | null;
+
+export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+
+export type JsonObject = { [key: string]: JsonValue };
 
 export interface WorkspaceInfo {
   workspace_id: string;
@@ -105,6 +112,17 @@ export interface MoveOptions {
   targetTerminalId?: string;
   label?: string;
 }
+
+export type PaneMoveDestination =
+  | {
+      type: "tab";
+      tab_id: string;
+      target_pane_id: string;
+      split: SplitDirection;
+      ratio: number;
+    }
+  | { type: "new_tab"; workspace_id: string; label?: string }
+  | { type: "new_workspace"; label?: string; tab_label?: string };
 
 export interface MoveOutcome {
   pane: PaneInfo;

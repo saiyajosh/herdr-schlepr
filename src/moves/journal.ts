@@ -14,11 +14,13 @@ export interface MoveJournal {
 
 function journalPath(): string | undefined {
   const state = process.env.HERDR_PLUGIN_STATE_DIR;
+
   return state ? path.join(state, "last-move.json") : undefined;
 }
 
 export function writeJournal(journal: MoveJournal): void {
   const file = journalPath();
+
   if (!file) return;
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const temporary = `${file}.${process.pid}.tmp`;
@@ -28,5 +30,6 @@ export function writeJournal(journal: MoveJournal): void {
 
 export function clearJournal(): void {
   const file = journalPath();
+
   if (file) fs.rmSync(file, { force: true });
 }

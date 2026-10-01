@@ -3,10 +3,14 @@ import { spawnSync } from "node:child_process";
 import type { MoveMode } from "./types.js";
 
 const herdr = process.env.HERDR_BIN_PATH ?? "herdr";
+
 const pluginId = process.env.HERDR_PLUGIN_ID ?? "schlepr";
+
 const mode: MoveMode = process.argv[2] === "tab" ? "tab" : "pane";
-const context = parseContext(process.env.HERDR_PLUGIN_CONTEXT_JSON);
-const paneId = process.env.HERDR_PANE_ID ?? context.focused_pane_id;
+
+const invocationContext = parseContext(process.env.HERDR_PLUGIN_CONTEXT_JSON);
+
+const paneId = process.env.HERDR_PANE_ID ?? invocationContext.focused_pane_id;
 
 if (!paneId) {
   fail("no focused pane was supplied by Herdr");
@@ -38,10 +42,17 @@ if (opened.status !== 0) {
   fail((opened.stderr || opened.stdout || "could not open the Schlepr popup").trim());
 }
 
-function parseContext(raw: string | undefined): Record<string, string | undefined> {
+interface InvocationContext {
+  focused_pane_id?: string;
+}
+
+function parseContext(raw: string | undefined): InvocationContext {
   if (!raw) return {};
+
   try {
-    return JSON.parse(raw) as Record<string, string | undefined>;
+    const context: InvocationContext = JSON.parse(raw);
+
+    return context;
   } catch {
     return {};
   }

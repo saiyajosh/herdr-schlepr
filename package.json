@@ -9,10 +9,12 @@
   },
   "scripts": {
     "build": "esbuild src/launcher.ts src/popup/app.ts --bundle --platform=node --target=node20 --format=esm --outdir=dist",
+    "lint": "NODE_OPTIONS=--import=tsx oxlint --type-aware --deny-warnings --report-unused-disable-directives .",
+    "lint:fix": "NODE_OPTIONS=--import=tsx oxlint --fix .",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck && node --import tsx --test test/*.test.ts",
     "test:integration": "./scripts/integration-herdr.sh",
-    "check": "npm run test && npm run build"
+    "check": "npm run lint && npm run test && npm run build"
   },
   "keywords": [
     "herdr",
@@ -21,8 +23,11 @@
     "tui"
   ],
   "devDependencies": {
+    "@oxlint/plugins": "1.86.0",
     "@types/node": "^24.0.0",
     "esbuild": "^0.25.0",
+    "oxlint": "1.86.0",
+    "oxlint-tsgolint": "7.0.2003",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   }

@@ -6,6 +6,7 @@ import type {
   MoveOptions,
   MoveOutcome,
   PaneInfo,
+  PaneMoveDestination,
   SessionSnapshot,
   TabInfo,
 } from "../types.js";
@@ -15,7 +16,7 @@ import { clearJournal, writeJournal } from "./journal.js";
 export interface MoveClient {
   snapshot(): Promise<SessionSnapshot>;
   exportLayout(tabId: string): Promise<ExportedLayout>;
-  movePane(paneId: string, destination: Record<string, unknown>, focus: boolean): Promise<MoveOutcome>;
+  movePane(paneId: string, destination: PaneMoveDestination, focus: boolean): Promise<MoveOutcome>;
   focus(workspaceId: string, tabId: string): Promise<void>;
 }
 
@@ -35,17 +36,23 @@ export async function executePaneMove(
 ): Promise<ExecutionResult> {
   const fresh = await client.snapshot();
   const source = sourcePane(fresh, sourceTerminalId);
+
   if (source.tab_id !== originalTabId) throw new Error("The source pane moved while Schlepr was open; nothing was changed");
 
-  let requestDestination: Record<string, unknown>;
+  let requestDestination: PaneMoveDestination;
+
   if (destination.kind === "tab") {
     const layout = fresh.layouts.find((candidate) => candidate.tab_id === destination.tabId);
+
     if (!layout) throw new Error("The destination tab no longer exists");
+
     if (layout.zoomed) throw new Error("The destination tab is zoomed; unzoom it before moving a pane there");
     const candidates = fresh.panes.filter((pane) => pane.tab_id === destination.tabId);
+
     const target = options.targetTerminalId
       ? candidates.find((pane) => pane.terminal_id === options.targetTerminalId)
       : candidates.find((pane) => pane.focused) ?? candidates[0];
+
     if (!target) throw new Error("The destination tab has no target pane");
     requestDestination = {
       type: "tab",
@@ -55,22 +62,31 @@ export async function executePaneMove(
       ratio: options.ratio,
     };
   } else if (destination.kind === "new-tab") {
-    requestDestination = {
+    const newTab: Extract<PaneMoveDestination, { type: "new_tab" }> = {
       type: "new_tab",
       workspace_id: destination.workspaceId,
-      ...(options.label ? { label: options.label } : {}),
     };
+
+    if (options.label) newTab.label = options.label;
+    requestDestination = newTab;
   } else if (destination.kind === "new-workspace") {
-    requestDestination = {
+    const newWorkspace: Extract<PaneMoveDestination, { type: "new_workspace" }> = {
       type: "new_workspace",
-      ...(options.label ? { label: options.label, tab_label: options.label } : {}),
     };
+
+    if (options.label) {
+      newWorkspace.label = options.label;
+      newWorkspace.tab_label = options.label;
+    }
+
+    requestDestination = newWorkspace;
   } else {
     throw new Error("A pane must move to a tab, new tab, or new workspace");
   }
 
   const moved = await client.movePane(source.pane_id, requestDestination, true);
   const verified = await verifyTerminals(client, [sourceTerminalId], moved.pane.tab_id);
+
   return {
     workspaceId: moved.pane.workspace_id,
     tabId: moved.pane.tab_id,
@@ -92,16 +108,21 @@ export async function executeTabMove(
 
   const fresh = await client.snapshot();
   const source = sourcePane(fresh, sourceTerminalId);
+
   if (source.tab_id !== originalTabId) throw new Error("The source tab changed while Schlepr was open; nothing was changed");
   const sourceLayout = fresh.layouts.find((layout) => layout.tab_id === originalTabId);
+
   if (!sourceLayout) throw new Error("The source tab no longer exists");
+
   if (sourceLayout.zoomed) throw new Error("The source tab is zoomed; unzoom it before moving it");
 
   const exported = await client.exportLayout(originalTabId);
+
   if (exported.zoomed) throw new Error("The source tab is zoomed; unzoom it before moving it");
   const oldPaneIds = leaves(exported.root);
   const sourcePanes = fresh.panes.filter((pane) => pane.tab_id === originalTabId);
   const paneByOldId = new Map(sourcePanes.map((pane) => [pane.pane_id, pane]));
+
   if (oldPaneIds.length !== sourcePanes.length || oldPaneIds.some((id) => !paneByOldId.has(id))) {
     throw new Error("The source layout changed during preflight; nothing was changed");
   }
@@ -126,10 +147,12 @@ export async function executeTabMove(
     const rootOldId = anchor(exported.root);
     const rootTerminal = terminalByOldId.get(rootOldId)!;
     const rootPane = paneByOldId.get(rootOldId)!;
-    const firstDestination =
+
+    const firstDestination: PaneMoveDestination =
       destination.kind === "workspace"
         ? { type: "new_tab", workspace_id: destination.workspaceId, label }
         : { type: "new_workspace", label: labelOverride || label, tab_label: label };
+
     const first = await client.movePane(rootPane.pane_id, firstDestination, rootTerminal === focusedTerminal);
     newPaneByTerminal.set(rootTerminal, first.pane);
     const newTabId = first.pane.tab_id;
@@ -148,6 +171,7 @@ export async function executeTabMove(
     const verified = await verifyTerminals(client, terminalIds, newTabId);
     const focused = verified.find((pane) => pane.terminal_id === focusedTerminal) ?? verified[0]!;
     clearJournal();
+
     return {
       workspaceId: focused.workspace_id,
       tabId: newTabId,
@@ -180,13 +204,16 @@ async function placeSecondBranches(
   if (node.type === "pane") return;
   const targetTerminal = terminalByOldId.get(anchor(node.first))!;
   const targetPane = newPaneByTerminal.get(targetTerminal);
+
   if (!targetPane) throw new Error(`Could not resolve destination anchor ${targetTerminal}`);
   const secondOldId = anchor(node.second);
   const secondTerminal = terminalByOldId.get(secondOldId)!;
-  const sourcePane = paneByOldId.get(secondOldId);
-  if (!sourcePane) throw new Error(`Source pane ${secondOldId} disappeared`);
+  const secondSourcePane = paneByOldId.get(secondOldId);
+
+  if (!secondSourcePane) throw new Error(`Source pane ${secondOldId} disappeared`);
+
   const moved = await client.movePane(
-    sourcePane.pane_id,
+    secondSourcePane.pane_id,
     {
       type: "tab",
       tab_id: newTabId,
@@ -196,6 +223,7 @@ async function placeSecondBranches(
     },
     secondTerminal === focusedTerminal,
   );
+
   newPaneByTerminal.set(secondTerminal, moved.pane);
   await placeSecondBranches(client, node.first, newTabId, terminalByOldId, newPaneByTerminal, paneByOldId, focusedTerminal);
   await placeSecondBranches(client, node.second, newTabId, terminalByOldId, newPaneByTerminal, paneByOldId, focusedTerminal);
@@ -209,9 +237,11 @@ async function verifyTerminals(
   const after = await client.snapshot();
   const expected = new Set(terminalIds);
   const panes = after.panes.filter((pane) => expected.has(pane.terminal_id));
+
   if (panes.length !== terminalIds.length || panes.some((pane) => pane.tab_id !== expectedTabId)) {
     throw new Error("Move completed only partially; see Schlepr's recovery journal for diagnostics");
   }
+
   return panes;
 }
 

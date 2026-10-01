@@ -32,7 +32,7 @@ const snapshot: SessionSnapshot = {
 
 const source = snapshot.panes[0]!;
 
-test("pane destinations span workspaces, include creators, and mark zoomed tabs", () => {
+void test("pane destinations span workspaces, include creators, and mark zoomed tabs", () => {
   const items = destinationItems(snapshot, "pane", source);
   assert.equal(items.some((item) => item.id === "tab:w1:t1"), false);
   assert.equal(items.find((item) => item.id === "tab:w2:t1")?.disabledReason, "target tab is zoomed");
@@ -40,19 +40,19 @@ test("pane destinations span workspaces, include creators, and mark zoomed tabs"
   assert.equal(items.at(-1)?.destination.kind, "new-workspace");
 });
 
-test("tab destinations exclude the source workspace", () => {
+void test("tab destinations exclude the source workspace", () => {
   const items = destinationItems(snapshot, "tab", source);
   assert.deepEqual(items.map((item) => item.id), ["workspace:w2", "new-workspace"]);
 });
 
-test("filter keeps destination creation available so the query can become its name", () => {
+void test("filter keeps destination creation available so the query can become its name", () => {
   const items = filterItems(destinationItems(snapshot, "pane", source), "brand new thing");
   assert.equal(items.some((item) => item.destination.kind === "new-workspace"), true);
   assert.equal(items.some((item) => item.destination.kind === "new-tab"), true);
   assert.equal(items.some((item) => item.destination.kind === "tab"), false);
 });
 
-test("layout helpers preserve BSP leaf order", () => {
+void test("layout helpers preserve BSP leaf order", () => {
   const root: LayoutNode = {
     type: "split",
     direction: "right",
@@ -66,10 +66,11 @@ test("layout helpers preserve BSP leaf order", () => {
       second: { type: "pane", pane_id: "c" },
     },
   };
+
   assert.equal(anchor(root), "a");
   assert.deepEqual(leaves(root), ["a", "b", "c"]);
 });
 
-test("pane labels prefer terminal presentation over opaque IDs", () => {
+void test("pane labels prefer terminal presentation over opaque IDs", () => {
   assert.equal(paneLabel(source), "editor");
 });
