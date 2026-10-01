@@ -44,10 +44,9 @@ export function render(state: RenderState): void {
     : sourceTab
       ? tabLabel(sourceTab)
       : state.source.tab_id;
-  const sourceLocation = [
-    sourceWorkspace ? workspaceLabel(sourceWorkspace) : state.source.workspace_id,
-    sourceTab ? tabLabel(sourceTab) : state.source.tab_id,
-  ].join("  ›  ");
+  const workspaceName = sourceWorkspace ? workspaceLabel(sourceWorkspace) : state.source.workspace_id;
+  const tabName = sourceTab ? tabLabel(sourceTab) : state.source.tab_id;
+  const sourceLocation = workspaceName === tabName ? workspaceName : `${workspaceName}  ›  ${tabName}`;
   const selectionCount = state.items.length === 0 ? "0 / 0" : `${state.selected + 1} / ${state.items.length}`;
   const lines: string[] = [
     "",
