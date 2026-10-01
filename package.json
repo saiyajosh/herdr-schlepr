@@ -1,28 +1,54 @@
 {
   "name": "herdr-schlepr",
   "version": "0.1.0",
-  "description": "A polished Herdr popup for moving live panes and tabs across workspaces",
+  "description": "Move live Herdr panes and complete tabs between workspaces from a terminal popup",
   "type": "module",
   "license": "MIT",
+  "author": "saiyajosh",
+  "homepage": "https://github.com/saiyajosh/herdr-schlepr#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saiyajosh/herdr-schlepr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/saiyajosh/herdr-schlepr/issues"
+  },
   "engines": {
     "node": ">=20"
+  },
+  "packageManager": "pnpm@12.8.1",
+  "files": [
+    "dist",
+    "herdr-plugin.toml",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "build": "esbuild src/launcher.ts src/popup/app.ts --bundle --platform=node --target=node20 --format=esm --outdir=dist",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck && node --import tsx --test test/*.test.ts",
+    "test": "pnpm run typecheck && node --import tsx --test test/*.test.ts",
     "test:integration": "./scripts/integration-herdr.sh",
-    "check": "npm run test && npm run build"
+    "check": "pnpm run test && pnpm run build",
+    "lint:package": "publint",
+    "pack:check": "pnpm run check && pnpm run lint:package && pnpm pack --dry-run",
+    "prepack": "pnpm run build",
+    "prepublishOnly": "pnpm run check && pnpm run lint:package"
   },
   "keywords": [
     "herdr",
     "herdr-plugin",
     "terminal",
+    "terminal-multiplexer",
     "tui"
   ],
   "devDependencies": {
     "@types/node": "^24.0.0",
     "esbuild": "^0.25.0",
+    "publint": "^0.3.24",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   }

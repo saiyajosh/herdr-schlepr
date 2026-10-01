@@ -16,22 +16,37 @@ Herdr can move a live pane through `pane.move`, but does not currently expose cr
 - Record interrupted multi-pane moves for diagnosis
 - Searchable, dependency-free popup UI
 
-Schlepr requires **Herdr 0.9+** and **Node.js 20+** on macOS or Linux.
+Schlepr requires **Herdr 0.9+**, **Node.js 20+**, and **pnpm 12+** on macOS or Linux.
 
-## Install from source
+## Install
+
+From Herdr's plugin registry:
+
+```bash
+herdr plugin install saiyajosh/herdr-schlepr
+```
+
+From npm:
+
+```bash
+pnpm add --global herdr-schlepr
+herdr plugin link "$(pnpm root --global)/herdr-schlepr"
+```
+
+### Install from source
 
 ```bash
 git clone https://github.com/saiyajosh/herdr-schlepr
 cd herdr-schlepr
-npm install
-npm run build
+corepack pnpm install --frozen-lockfile
+pnpm run build
 herdr plugin link "$PWD"
 ```
 
 During local development, rebuild after source changes:
 
 ```bash
-npm run build
+pnpm run build
 herdr server reload-config
 ```
 
@@ -91,14 +106,17 @@ The journal is diagnostic; automatic rollback is intentionally not promised beca
 ## Development
 
 ```bash
-npm test
-npm run build
-npm run check
-npm run test:integration # opt-in; requires a running Herdr session
+pnpm test
+pnpm run build
+pnpm run check
+pnpm run pack:check
+pnpm run test:integration # opt-in; requires a running Herdr session
 herdr plugin link "$PWD"
 herdr plugin action list --plugin schlepr
 herdr plugin log list --plugin schlepr
 ```
+
+Maintainers can publish a verified package with `pnpm publish`. The publish lifecycle reruns the complete check suite, validates the package with Publint, rebuilds `dist/`, and requests npm provenance. Publishing a GitHub release tagged `v<package version>` runs the same flow through npm trusted publishing. Before using that workflow, configure npm's trusted publisher for `saiyajosh/herdr-schlepr` and `.github/workflows/publish.yml`.
 
 ## License
 

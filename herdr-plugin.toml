@@ -6,10 +6,10 @@ description = "Move live panes and complete tabs between Herdr workspaces from a
 platforms = ["linux", "macos"]
 
 [[build]]
-command = ["npm", "ci"]
+command = ["pnpm", "install", "--frozen-lockfile"]
 
 [[build]]
-command = ["npm", "run", "build"]
+command = ["pnpm", "run", "build"]
 
 [[actions]]
 id = "move"
