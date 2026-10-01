@@ -91,6 +91,7 @@ The journal is diagnostic; automatic rollback is intentionally not promised beca
 ## Development
 
 ```bash
+npm run lint
 npm test
 npm run build
 npm run check
