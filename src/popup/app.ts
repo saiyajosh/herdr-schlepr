@@ -6,6 +6,7 @@ import { HerdrClient } from "../herdr/client.js";
 import { executePaneMove, executeTabMove } from "../moves/execute.js";
 import { destinationItems, filterItems, sourcePane } from "../moves/model.js";
 import type { DestinationItem, MoveMode, PaneInfo, SessionSnapshot } from "../types.js";
+import { navigateSelection, type NavigationCommand } from "./navigation.js";
 import { color, render } from "./render.js";
 
 process.on("uncaughtException", crash);
@@ -62,13 +63,9 @@ async function handleKey(text: string | undefined, key: readline.Key): Promise<v
     targetIndex = 0;
     return draw();
   }
-  if (key.name === "up" || (key.ctrl && key.name === "p" && mode === "tab")) {
-    selected = Math.max(0, selected - 1);
-    targetIndex = 0;
-    return draw();
-  }
-  if (key.name === "down" || (key.ctrl && key.name === "n")) {
-    selected = Math.min(Math.max(0, currentItems().length - 1), selected + 1);
+  const navigation = navigationCommand(key);
+  if (navigation) {
+    selected = navigateSelection(selected, currentItems().length, navigation);
     targetIndex = 0;
     return draw();
   }
@@ -97,7 +94,7 @@ async function handleKey(text: string | undefined, key: readline.Key): Promise<v
     ratioIndex = (ratioIndex + 1) % ratios.length;
     return draw();
   }
-  if (mode === "pane" && key.ctrl && key.name === "p") {
+  if (mode === "pane" && key.ctrl && key.name === "t") {
     const panes = targetPanes(currentItems()[selected]);
     targetIndex = panes.length ? (targetIndex + 1) % panes.length : 0;
     return draw();
@@ -148,6 +145,16 @@ async function performMove(): Promise<void> {
     message = { kind: "error", text: error instanceof Error ? error.message : String(error) };
     draw();
   }
+}
+
+function navigationCommand(key: readline.Key): NavigationCommand | undefined {
+  if (key.name === "up" || (key.ctrl && key.name === "k")) return "previous";
+  if (key.name === "down" || (key.ctrl && key.name === "j") || (key.ctrl && key.name === "n")) return "next";
+  if (key.name === "pageup") return "page-previous";
+  if (key.name === "pagedown") return "page-next";
+  if (key.name === "home") return "first";
+  if (key.name === "end") return "last";
+  return undefined;
 }
 
 function currentSource(): PaneInfo {

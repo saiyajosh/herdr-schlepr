@@ -63,14 +63,16 @@ herdr server reload-config
 
 | Key | Action |
 | --- | --- |
-| `↑` / `↓` | Select a destination |
+| `↑` / `↓`, `Ctrl-K` / `Ctrl-J` | Select a destination; wraps at the edges |
+| `Page Up` / `Page Down` | Jump through long destination lists |
+| `Home` / `End` | Go to the first or last destination |
 | Type | Filter destinations; the query names new tabs/workspaces |
 | `Backspace` / `Ctrl-U` | Edit or clear the query |
 | `Tab` | Switch between moving one pane and the complete tab |
 | `Enter` | Move |
 | `Ctrl-D` | Toggle right/down split |
 | `Ctrl-R` | Cycle 33%/50%/67% split ratios |
-| `Ctrl-P` | Cycle the exact target pane in the destination tab |
+| `Ctrl-T` | Cycle the exact target pane in the destination tab |
 | `Ctrl-L` | Refresh live Herdr state |
 | `Esc` / `Ctrl-C` | Cancel |
 
