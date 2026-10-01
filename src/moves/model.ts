@@ -22,14 +22,25 @@ export function paneLabel(pane: PaneInfo): string {
     pane.terminal_title_stripped?.trim() ||
     pane.terminal_title?.trim() ||
     pane.agent?.trim() ||
-    pane.foreground_cwd?.split("/").filter(Boolean).at(-1) ||
+    finalPathSegment(pane.foreground_cwd) ||
     pane.pane_id
   );
 }
 
+function finalPathSegment(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+
+  const normalized = value.endsWith("/") ? value.slice(0, -1) : value;
+  const separator = normalized.lastIndexOf("/");
+
+  return normalized.slice(separator + 1) || undefined;
+}
+
 export function sourcePane(snapshot: SessionSnapshot, sourceTerminalId: string): PaneInfo {
   const pane = snapshot.panes.find((candidate) => candidate.terminal_id === sourceTerminalId);
+
   if (!pane) throw new Error("The source terminal no longer exists");
+
   return pane;
 }
 
@@ -46,19 +57,24 @@ export function destinationItems(
     for (const tab of snapshot.tabs) {
       if (tab.tab_id === source.tab_id) continue;
       const workspace = workspaces.get(tab.workspace_id);
+
       if (!workspace) continue;
       const disabledReason = layouts.get(tab.tab_id)?.zoomed ? "target tab is zoomed" : undefined;
       const wsName = workspaceLabel(workspace);
       const name = tabLabel(tab);
-      result.push({
+
+      const item: DestinationItem = {
         id: `tab:${tab.tab_id}`,
         label: `${wsName}  /  ${name}`,
         detail: `${tab.pane_count} pane${tab.pane_count === 1 ? "" : "s"}${tab.agent_status ? ` · ${tab.agent_status}` : ""}`,
         search: `${wsName} ${name} ${tab.tab_id}`,
         destination: { kind: "tab", workspaceId: tab.workspace_id, tabId: tab.tab_id },
-        ...(disabledReason ? { disabledReason } : {}),
-      });
+      };
+
+      if (disabledReason) item.disabledReason = disabledReason;
+      result.push(item);
     }
+
     for (const workspace of snapshot.workspaces) {
       const name = workspaceLabel(workspace);
       result.push({
@@ -90,23 +106,39 @@ export function destinationItems(
     search: "new workspace create",
     destination: { kind: "new-workspace" },
   });
+
   return result;
 }
 
 export function filterItems(items: DestinationItem[], query: string): DestinationItem[] {
   const terms = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+
   if (terms.length === 0) return items;
-  return items
-    .map((item, index) => {
-      const haystack = item.search.toLocaleLowerCase();
-      const isCreator = item.destination.kind === "new-tab" || item.destination.kind === "new-workspace";
-      const matches = isCreator || terms.every((term) => haystack.includes(term));
-      const rank = isCreator ? 2 : haystack.startsWith(terms.join(" ")) ? 0 : 1;
-      return { item, index, matches, rank };
-    })
-    .filter((entry) => entry.matches)
-    .sort((a, b) => a.rank - b.rank || a.index - b.index)
-    .map((entry) => entry.item);
+
+  const ranked: Array<{ item: DestinationItem; index: number; rank: number }> = [];
+
+  for (const [index, item] of items.entries()) {
+    const haystack = item.search.toLocaleLowerCase();
+    const isCreator = item.destination.kind === "new-tab" || item.destination.kind === "new-workspace";
+    const matches = isCreator || terms.every((term) => haystack.includes(term));
+
+    if (!matches) continue;
+
+    const rank = isCreator ? 2 : haystack.startsWith(terms.join(" ")) ? 0 : 1;
+    ranked.push({ item, index, rank });
+  }
+
+  const ordered: typeof ranked = [];
+
+  for (const entry of ranked) {
+    const position = ordered.findIndex((candidate) =>
+      candidate.rank > entry.rank || (candidate.rank === entry.rank && candidate.index > entry.index));
+
+    if (position === -1) ordered.push(entry);
+    else ordered.splice(position, 0, entry);
+  }
+
+  return ordered.map((entry) => entry.item);
 }
 
 export function leaves(node: LayoutNode, output: string[] = []): string[] {
@@ -115,6 +147,7 @@ export function leaves(node: LayoutNode, output: string[] = []): string[] {
     leaves(node.first, output);
     leaves(node.second, output);
   }
+
   return output;
 }
 
