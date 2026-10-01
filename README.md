@@ -16,22 +16,30 @@ Herdr can move a live pane through `pane.move`, but does not currently expose cr
 - Record interrupted multi-pane moves for diagnosis
 - Searchable, dependency-free popup UI
 
-Schlepr requires **Herdr 0.9+** and **Node.js 20+** on macOS or Linux.
+Schlepr requires **Herdr 0.9+**, **Node.js 20+**, and **pnpm 12+** on macOS or Linux.
 
-## Install from source
+## Install
+
+From Herdr's plugin registry:
+
+```bash
+herdr plugin install saiyajosh/herdr-schlepr
+```
+
+### Install from source
 
 ```bash
 git clone https://github.com/saiyajosh/herdr-schlepr
 cd herdr-schlepr
-npm install
-npm run build
+corepack pnpm install --frozen-lockfile
+pnpm run build
 herdr plugin link "$PWD"
 ```
 
 During local development, rebuild after source changes:
 
 ```bash
-npm run build
+pnpm run build
 herdr server reload-config
 ```
 
@@ -91,14 +99,15 @@ The journal is diagnostic; automatic rollback is intentionally not promised beca
 ## Development
 
 ```bash
-npm test
-npm run build
-npm run check
-npm run test:integration # opt-in; requires a running Herdr session
+pnpm test
+pnpm run build
+pnpm run check
+pnpm run test:integration # opt-in; requires a running Herdr session
 herdr plugin link "$PWD"
 herdr plugin action list --plugin schlepr
 herdr plugin log list --plugin schlepr
 ```
+
 
 ## License
 
