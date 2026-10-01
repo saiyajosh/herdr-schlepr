@@ -9,8 +9,8 @@
   },
   "scripts": {
     "build": "esbuild src/launcher.ts src/popup/app.ts --bundle --platform=node --target=node20 --format=esm --outdir=dist",
-    "lint": "oxlint --type-aware --deny-warnings --report-unused-disable-directives .",
-    "lint:fix": "oxlint --fix .",
+    "lint": "NODE_OPTIONS=--import=tsx oxlint --type-aware --deny-warnings --report-unused-disable-directives .",
+    "lint:fix": "NODE_OPTIONS=--import=tsx oxlint --fix .",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck && node --import tsx --test test/*.test.ts",
     "test:integration": "./scripts/integration-herdr.sh",
