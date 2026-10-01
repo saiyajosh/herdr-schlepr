@@ -92,6 +92,7 @@ export type Destination =
 
 export interface DestinationItem {
   id: string;
+  section: string;
   label: string;
   detail: string;
   search: string;

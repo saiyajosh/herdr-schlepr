@@ -52,7 +52,8 @@ export function destinationItems(
       const name = tabLabel(tab);
       result.push({
         id: `tab:${tab.tab_id}`,
-        label: `${wsName}  /  ${name}`,
+        section: wsName,
+        label: name,
         detail: `${tab.pane_count} pane${tab.pane_count === 1 ? "" : "s"}${tab.agent_status ? ` · ${tab.agent_status}` : ""}`,
         search: `${wsName} ${name} ${tab.tab_id}`,
         destination: { kind: "tab", workspaceId: tab.workspace_id, tabId: tab.tab_id },
@@ -63,8 +64,9 @@ export function destinationItems(
       const name = workspaceLabel(workspace);
       result.push({
         id: `new-tab:${workspace.workspace_id}`,
-        label: `${name}  /  ＋ new tab`,
-        detail: "create a tab and keep the terminal live",
+        section: name,
+        label: "＋ New tab",
+        detail: "create here",
         search: `${name} new tab ${workspace.workspace_id}`,
         destination: { kind: "new-tab", workspaceId: workspace.workspace_id },
       });
@@ -75,6 +77,7 @@ export function destinationItems(
       const name = workspaceLabel(workspace);
       result.push({
         id: `workspace:${workspace.workspace_id}`,
+        section: "Workspace",
         label: name,
         detail: `${workspace.tab_count} tab${workspace.tab_count === 1 ? "" : "s"} · ${workspace.pane_count} pane${workspace.pane_count === 1 ? "" : "s"}`,
         search: `${name} ${workspace.workspace_id}`,
@@ -85,8 +88,9 @@ export function destinationItems(
 
   result.push({
     id: "new-workspace",
-    label: "＋ new workspace",
-    detail: "type a name, then move",
+    section: "Create",
+    label: "＋ New workspace",
+    detail: "query becomes its name",
     search: "new workspace create",
     destination: { kind: "new-workspace" },
   });
